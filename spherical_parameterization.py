@@ -7,10 +7,10 @@ import time
 from willmore import WillmoreFlow, Mesh
 
 MESH_ROOT = "./meshes"
-MESH = "spot.obj"
+MESH = "bunny.obj"
 SAVE_PATH = "./parameterization"
 
-STEP = 10
+STEP = 15
 TAU  = 0.3
 CUPY = True
 
@@ -32,3 +32,5 @@ for i in range(STEP):
 
 end = time.perf_counter() 
 print(f"Parameterization finished! Time Cost: {(end-begin):.3f} s")
+
+igl.write_triangle_mesh(os.path.join(SAVE_PATH, f"bunny_sphere2.obj"), V, F)

@@ -3,7 +3,7 @@ from scipy import sparse
 
 from .mesh import Mesh
 from .quaternion import QuaternionMatrix, QList
-from .util import buildAdj, vertex_area, ismember, timeit
+from .util import buildAdj, vertex_area, ismember, timeit, area_normalization
 from .dirac import buildDirac
 
 
@@ -28,15 +28,19 @@ def solveEigen(mesh: Mesh, rho: np.ndarray, cupy=False) -> QList:
 
     ## TODO: build Dirac and move to GPU is the most time consuming process
     Dirac = buildDirac(mesh, rho).toReal(cupy)
+    
+    # ## TODO: it seems that area normalization is not very helpful
+    # R = area_normalization(V, F).toReal(cupy)
+    # Dirac = Dirac + R
 
-    M1 = adj_matrix.T @ Dirac @ Dirac @ adj_matrix
+    M1 = adj_matrix.T @ Dirac.T @ Dirac @ adj_matrix
     M1 = 0.5 * (M1 + M1.T)
 
     ## solve the smallest eigen value and the corresponding eigen vector
     if cupy:
         import cupy as cp
         from cupyx.scipy import sparse as cusp
-        from cupyx.scipy.sparse.linalg import cgs
+        from cupyx.scipy.sparse.linalg import cgs, spsolve
 
         ## M2 is the inverse vertex area, different from the scipy version
         M2 = cp.array(1./VA)
@@ -48,12 +52,20 @@ def solveEigen(mesh: Mesh, rho: np.ndarray, cupy=False) -> QList:
         ## solve eig with inverse iteration
         A = M2 @ M1
         b = cp.ones(4*len(V))
+        # b = cp.random.randn(4*len(V))
 
         for i in range(3):
             b /= cp.linalg.norm(b)
+            
+            ## use cgs
             x, _ = cgs(A, b)
+
+            ## use spsolve
+            # x = spsolve(A, b)
+
             b = x
 
+        x /= cp.linalg.norm(x)
         eigen_f = cp.asnumpy(x)
 
         ## move VA back to CPU
@@ -73,7 +85,9 @@ def solveEigen(mesh: Mesh, rho: np.ndarray, cupy=False) -> QList:
 
     ## Dirac alignment
     ## normalize the quaternions with vertex area
-    qs = QList(eigen_f.flatten())
+    eigen_f = eigen_f.flatten()
+    
+    qs = QList(eigen_f)
 
     qscale = sum([q.inv()*w for q, w in zip(qs, VA)])
     qscale.normalize()

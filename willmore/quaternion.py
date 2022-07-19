@@ -339,7 +339,6 @@ class QuaternionMatrix:
         M.data = self.data.copy()
         return M
 
-    ## TODO: this is time consuming, try to optimize with joblib
     @timeit
     def toReal(self, cupy=False) -> csr_matrix:
         """Convert the quaternion matrix to a sparse matrix.
@@ -368,7 +367,7 @@ class QuaternionMatrix:
 
             M = csp.csr_matrix((cp.array(value), (cp.array(rows), cp.array(cols))), shape=(4*h, 4*w))
         
-        else:            
+        else:
             M = csr_matrix((value, (rows, cols)), shape=(4*h, 4*w))
 
         return M
@@ -493,8 +492,8 @@ class QList:
     @staticmethod
     def _create_list(arg):
         if isinstance(arg, list):
-            for q in arg:
-                assert isinstance(q, Quaternion), "Invalid list input!"
+            # for q in arg:
+            #     assert isinstance(q, Quaternion), "Invalid list input!"
             
             return np.array(arg, dtype=object)
 

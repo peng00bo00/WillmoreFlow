@@ -26,9 +26,6 @@ def curvature_transfer_step(V: np.ndarray, F: np.ndarray, target: Mesh, tau: flo
     rho = target.face_curvature * np.sqrt(mesh.face_area / target.face_area) - mesh.face_curvature
     rho*= tau
 
-    ## normalize rho
-    rho = rho - np.sum(rho) / np.sum(mesh.face_area) * mesh.face_area
-
     ## solve Eigen system
     qs = solveEigen(mesh, rho, cupy)
 
