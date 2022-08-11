@@ -6,14 +6,14 @@ from .solver import solveEigen, solvePoisson
 from .util import timeit
 
 
-def curvature_transfer_step(V: np.ndarray, F: np.ndarray, target: Mesh, tau: float = 0.1, cupy=False) -> np.ndarray:
+def curvature_transfer_step(V: np.ndarray, F: np.ndarray, target: np.ndarray, tau: float = 0.1, cupy=False) -> np.ndarray:
     """
     One step curvature transfer.
 
     Args:
         V: vertex array
         F: faces array
-        target: target mesh data structure (TODO: actually we only needs mean curvature half density)
+        target: target mean curvature half density on each face
         tau: step size
         cupy: whether to use cupy for acceleration
     
@@ -23,7 +23,8 @@ def curvature_transfer_step(V: np.ndarray, F: np.ndarray, target: Mesh, tau: flo
 
     ## set up (face) curvature potential function
     mesh = Mesh(V, F)
-    rho = target.face_curvature * np.sqrt(mesh.face_area / target.face_area) - mesh.face_curvature
+    # rho = target.face_curvature * np.sqrt(mesh.face_area / target.face_area) - mesh.face_curvature
+    rho = target * np.sqrt(mesh.face_area) - mesh.face_curvature
     rho*= tau
 
     ## solve Eigen system
