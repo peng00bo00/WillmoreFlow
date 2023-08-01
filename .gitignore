@@ -130,3 +130,6 @@ dmypy.json
 
 # mesh
 *.obj
+
+# scripts
+spherical_parameterization.py
