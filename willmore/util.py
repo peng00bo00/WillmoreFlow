@@ -171,3 +171,71 @@ def area_normalization(V, F) -> QuaternionMatrix:
             R[Fj, Fj] += 0.5*w
     
     return R
+
+def findOrigin(V: np.ndarray, F: np.ndarray) -> np.ndarray:
+    """A helper function to find the center of mesh.
+
+    Args:
+        V: vertices
+        F: faces
+    
+    Return:
+        x0: center of the mesh
+    """
+
+    weights = 0
+    x0 = np.zeros(3)
+
+    for (i, j, k) in F:
+        vi, vj, vk = V[i], V[j], V[k]
+
+        ## volume of the tetrahedron
+        vol = np.dot(vi, np.cross(vj, vk)) / 6
+
+        weights += vol
+        x0 += vol * (vi + vj + vk) / 4
+    
+    return x0 / weights
+
+def volume(V: np.ndarray, F: np.ndarray) -> float:
+    """A helper function to find volume of the mesh.
+
+    Args:
+        V: vertices
+        F: faces
+    
+    Return:
+        vol: volume of the mesh
+    """
+
+    vol = 0.
+    for (i, j, k) in F:
+        vi, vj, vk = V[i], V[j], V[k]
+
+        ## volume of the tetrahedron
+        vol += np.dot(vi, np.cross(vj, vk)) / 6
+    
+    return vol
+
+def normalizeMesh(V: np.ndarray, F: np.ndarray) -> np.ndarray:
+    """A helper function to normalize the mesh to unit volume.
+
+    Args:
+        V: vertices
+        F: faces
+    
+    Return:
+        Vnew: new vertices coordinates
+    """
+
+    ## move to center
+    c = findOrigin(V, F)
+    Vnew = V - c
+    
+    ## solve volume
+    vol = volume(Vnew, F)
+
+    ## normalize volume
+    Vnew /= np.power(vol, 1/3)
+
+    return Vnew
